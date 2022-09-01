@@ -1,0 +1,743 @@
+{
+	"name": "FHIR_Pipeline4Claim_Spark_OC",
+	"properties": {
+		"activities": [
+			{
+				"name": "NDJSON_Ingestion_Claim",
+				"type": "SynapseNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebook": {
+						"referenceName": "Claim_Ingestion_NDJSON2Parquet",
+						"type": "NotebookReference"
+					},
+					"snapshot": true,
+					"sparkPool": {
+						"referenceName": "healthcare",
+						"type": "BigDataPoolReference"
+					}
+				}
+			},
+			{
+				"name": "ClaimParquetFlatten_Large",
+				"type": "SynapseNotebook",
+				"dependsOn": [
+					{
+						"activity": "NDJSON_Ingestion_Claim",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebook": {
+						"referenceName": "ClaimParquetFlatten_Large",
+						"type": "NotebookReference"
+					},
+					"snapshot": true,
+					"sparkPool": {
+						"referenceName": "healthcare",
+						"type": "BigDataPoolReference"
+					}
+				}
+			},
+			{
+				"name": "ClaimDiagnosis2SQL",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ClaimParquetFlatten_Large",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "fhir/30tbCurated/Claim_diagnosis",
+							"wildcardFileName": "*.parquet",
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "SqlDWSink",
+						"allowCopyCommand": true,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "health-WorkspaceDefaultStorage",
+							"type": "LinkedServiceReference"
+						},
+						"path": "synapse/synapse/workspaces/staging"
+					},
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "id",
+									"type": "String"
+								},
+								"sink": {
+									"name": "id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "resourceType",
+									"type": "String"
+								},
+								"sink": {
+									"name": "resourceType",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "status",
+									"type": "String"
+								},
+								"sink": {
+									"name": "status",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "billablePeriod_end",
+									"type": "String"
+								},
+								"sink": {
+									"name": "billablePeriod_end",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "billablePeriod_start",
+									"type": "String"
+								},
+								"sink": {
+									"name": "billablePeriod_start",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "created",
+									"type": "String"
+								},
+								"sink": {
+									"name": "created",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "patient_display",
+									"type": "String"
+								},
+								"sink": {
+									"name": "patient_display",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "patient_reference",
+									"type": "String"
+								},
+								"sink": {
+									"name": "patient_reference",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "prescription_reference",
+									"type": "String"
+								},
+								"sink": {
+									"name": "prescription_reference",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "provider_display",
+									"type": "String"
+								},
+								"sink": {
+									"name": "provider_display",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "provider_reference",
+									"type": "String"
+								},
+								"sink": {
+									"name": "provider_reference",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "total_currency",
+									"type": "String"
+								},
+								"sink": {
+									"name": "total_currency",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "total_value",
+									"type": "Double"
+								},
+								"sink": {
+									"name": "total_value",
+									"type": "Double"
+								}
+							},
+							{
+								"source": {
+									"name": "use",
+									"type": "String"
+								},
+								"sink": {
+									"name": "use",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "reference",
+									"type": "String"
+								},
+								"sink": {
+									"name": "reference",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "sequence",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "sequence",
+									"type": "Int64"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ClaimDiagnosisParquetLarge",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ClaimDiagnosisSQL1",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "ClaimInsurance2SQL",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ClaimParquetFlatten_Large",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "fhir/30tbCurated/Claim_insurance",
+							"wildcardFileName": "*.parquet",
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "SqlPoolSink",
+						"allowCopyCommand": true,
+						"tableOption": "autoCreate"
+					},
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "health-WorkspaceDefaultStorage",
+							"type": "LinkedServiceReference"
+						},
+						"path": "synapse/synapse/workspaces/staging"
+					},
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "id",
+									"type": "String"
+								},
+								"sink": {
+									"name": "id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "resourceType",
+									"type": "String"
+								},
+								"sink": {
+									"name": "resourceType",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "status",
+									"type": "String"
+								},
+								"sink": {
+									"name": "status",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "billablePeriod_end",
+									"type": "String"
+								},
+								"sink": {
+									"name": "billablePeriod_end",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "billablePeriod_start",
+									"type": "String"
+								},
+								"sink": {
+									"name": "billablePeriod_start",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "created",
+									"type": "String"
+								},
+								"sink": {
+									"name": "created",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "patient_display",
+									"type": "String"
+								},
+								"sink": {
+									"name": "patient_display",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "patient_reference",
+									"type": "String"
+								},
+								"sink": {
+									"name": "patient_reference",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "prescription_reference",
+									"type": "String"
+								},
+								"sink": {
+									"name": "prescription_reference",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "provider_display",
+									"type": "String"
+								},
+								"sink": {
+									"name": "provider_display",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "provider_reference",
+									"type": "String"
+								},
+								"sink": {
+									"name": "provider_reference",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "total_currency",
+									"type": "String"
+								},
+								"sink": {
+									"name": "total_currency",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "total_value",
+									"type": "Double"
+								},
+								"sink": {
+									"name": "total_value",
+									"type": "Double"
+								}
+							},
+							{
+								"source": {
+									"name": "use",
+									"type": "String"
+								},
+								"sink": {
+									"name": "use",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "display",
+									"type": "String"
+								},
+								"sink": {
+									"name": "display",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "focal",
+									"type": "Boolean"
+								},
+								"sink": {
+									"name": "focal",
+									"type": "Boolean"
+								}
+							},
+							{
+								"source": {
+									"name": "sequence",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "sequence",
+									"type": "Int64"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ClaimInsuranceParquetLarge",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Claim_insuranceSQL1",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "ClaimProcedure2SQL",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ClaimParquetFlatten_Large",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "fhir/30tbCurated/Claim_procedure",
+							"wildcardFileName": "*.parquet",
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "SqlDWSink",
+						"allowCopyCommand": true,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "health-WorkspaceDefaultStorage",
+							"type": "LinkedServiceReference"
+						},
+						"path": "synapse/synapse/workspaces/staging"
+					},
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "id",
+									"type": "String"
+								},
+								"sink": {
+									"name": "id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "resourceType",
+									"type": "String"
+								},
+								"sink": {
+									"name": "resourceType",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "status",
+									"type": "String"
+								},
+								"sink": {
+									"name": "status",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "billablePeriod_end",
+									"type": "String"
+								},
+								"sink": {
+									"name": "billablePeriod_end",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "billablePeriod_start",
+									"type": "String"
+								},
+								"sink": {
+									"name": "billablePeriod_start",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "created",
+									"type": "String"
+								},
+								"sink": {
+									"name": "created",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "patient_display",
+									"type": "String"
+								},
+								"sink": {
+									"name": "patient_display",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "patient_reference",
+									"type": "String"
+								},
+								"sink": {
+									"name": "patient_reference",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "prescription_reference",
+									"type": "String"
+								},
+								"sink": {
+									"name": "prescription_reference",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "provider_display",
+									"type": "String"
+								},
+								"sink": {
+									"name": "provider_display",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "provider_reference",
+									"type": "String"
+								},
+								"sink": {
+									"name": "provider_reference",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "total_currency",
+									"type": "String"
+								},
+								"sink": {
+									"name": "total_currency",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "total_value",
+									"type": "Double"
+								},
+								"sink": {
+									"name": "total_value",
+									"type": "Single"
+								}
+							},
+							{
+								"source": {
+									"name": "use",
+									"type": "String"
+								},
+								"sink": {
+									"name": "use",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "reference",
+									"type": "String"
+								},
+								"sink": {
+									"name": "reference",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "sequence",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "sequence",
+									"type": "Int64"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ClaimProcedureParquetLarge",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ClaimProcedureSQL1",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"annotations": []
+	}
+}

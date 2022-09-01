@@ -1,0 +1,20 @@
+{
+	"name": "Patient_extension_CTAS_OC",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"content": {
+			"query": "IF OBJECT_ID(N'healthcare.[fhir].[Patient_extension_hash]') IS NOT NULL\nBEGIN\nDROP TABLE [fhir].[Patient_extension_hash]\nEND\nGO\n\nCREATE TABLE [fhir].[Patient_extension_hash]\nWITH\n(\n    CLUSTERED COLUMNSTORE INDEX,\n    DISTRIBUTION = HASH(Patient_id)\n)\nAS SELECT \n\tCAST([Patient_id] AS [nvarchar](64))  Patient_id,\n\tCAST([resourceType] AS [nvarchar](64))  resourceType,\n\tCAST([birthDate] AS [nvarchar](64))  birthDate,\n\tCAST([deceasedDateTime] AS [nvarchar](64))  deceasedDateTime,\n\tCAST([gender] AS [nvarchar](64))  gender,\n\t[multipleBirthBoolean],\n\tCAST([multipleBirthInteger] AS [int])  multipleBirthInteger,\n\tCAST([text_div] AS [nvarchar](64))  text_div,\n\tCAST([text_status] AS [nvarchar](64))  text_status,\n\tCAST([maritalStatus_text] AS [nvarchar](64))  maritalStatus_text,\n\tCAST([url] AS [nvarchar](64))  url,\n\tCAST([city] AS [nvarchar](64))  city,\n\tCAST([country] AS [nvarchar](64))  country,\n\tCAST([state] AS [nvarchar](64))  state,\n\t[valueDecimal],\n\tCAST([valueString] AS [nvarchar](64))  valueString\nFROM [staging].[Patient_extension_heap];\n\nselect top 10 * from [fhir].[Patient_extension_hash];\n\nIF OBJECT_ID(N'healthcare.[fhir].[Patient_extension_hash_dedupe]') IS NOT NULL\nBEGIN\nDROP TABLE [fhir].[Patient_extension_hash_dedupe]\nEND\nGO\n\nCREATE TABLE [fhir].[Patient_extension_hash_dedupe]\nWITH\n(\n    CLUSTERED COLUMNSTORE INDEX,\n    DISTRIBUTION = HASH(Patient_id)\n)\nAS SELECT \n\tdistinct \n\tCAST([Patient_id] AS [nvarchar](64))  Patient_id,\n\tCAST([resourceType] AS [nvarchar](64))  resourceType,\n\tCAST([birthDate] AS [nvarchar](64))  birthDate,\n\tCAST([deceasedDateTime] AS [nvarchar](64))  deceasedDateTime,\n\tCAST([gender] AS [nvarchar](64))  gender,\n\t[multipleBirthBoolean],\n\tCAST([multipleBirthInteger] AS [int])  multipleBirthInteger,\n\tCAST([text_div] AS [nvarchar](64))  text_div,\n\tCAST([text_status] AS [nvarchar](64))  text_status,\n\tCAST([maritalStatus_text] AS [nvarchar](64))  maritalStatus_text,\n\tCAST([url] AS [nvarchar](64))  url,\n\tCAST([city] AS [nvarchar](64))  city,\n\tCAST([country] AS [nvarchar](64))  country,\n\tCAST([state] AS [nvarchar](64))  state\nFROM [staging].[Patient_extension_heap];\n\nselect count(*) from [fhir].[Patient_extension_hash_dedupe];\n\n/*\nCREATE TABLE [staging].[Patient_extension_heap]\n( \n\t[Patient_id] [nvarchar](4000)  NULL,\n\t[resourceType] [nvarchar](4000)  NULL,\n\t[birthDate] [nvarchar](4000)  NULL,\n\t[deceasedDateTime] [nvarchar](4000)  NULL,\n\t[gender] [nvarchar](4000)  NULL,\n\t[multipleBirthBoolean] [bit]  NULL,\n\t[multipleBirthInteger] [bigint]  NULL,\n\t[text_div] [nvarchar](4000)  NULL,\n\t[text_status] [nvarchar](4000)  NULL,\n\t[maritalStatus_text] [nvarchar](4000)  NULL,\n\t[url] [nvarchar](4000)  NULL,\n\t[city] [nvarchar](4000)  NULL,\n\t[country] [nvarchar](4000)  NULL,\n\t[state] [nvarchar](4000)  NULL,\n\t[valueDecimal] [float]  NULL,\n\t[valueString] [nvarchar](4000)  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\n*/",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "healthcare",
+				"poolName": "healthcare"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

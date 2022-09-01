@@ -1,0 +1,20 @@
+{
+	"name": "Get Database Object Count",
+	"properties": {
+		"folder": {
+			"name": "Performance Tuning/SystemProfile"
+		},
+		"content": {
+			"query": "/***************************************************************************************************\nCreate Date:        08-20-2020\nAuthor:             Casey Karst MSFT\nDescription:        This query runs against the USER DB and returns the count of database objects by\n\t\t\t\t\tschema and object type.\n****************************************************************************************************\nSUMMARY OF CHANGES\nDate(yyyy-mm-dd)    Author              Comments\n------------------- ------------------- ------------------------------------------------------------\n08-20-2020          Casey Karst\t\t\tAdded      \n***************************************************************************************************/\nselect\n  db_name() as DBName,\n  s.name as SchemaName,\n  o.type_desc,\n  count(1) as ObjectCount,\n  db_name() + '_' + s.name as row_key\nfrom\n  sys.objects o\n  inner join sys.schemas s ON o.schema_id = s.schema_id\ngroup by\n  s.name,\n  o.type_desc\nUNION ALL\nselect\n  db_name() as DBName,\n  s.name as SchemaName,\n  'STAT' as type_desc,\n  count(1) as ObjectCount,\n  db_name() + '_' + s.name as row_key\nfrom\n  sys.objects o\n  inner join sys.schemas s ON o.schema_id = s.schema_id\n  inner join sys.stats ss ON o.object_id = ss.object_id\ngroup by\n  s.name\nORDER BY\n  db_name(),\n  s.name;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SQLPool01",
+				"poolName": "SQLPool01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

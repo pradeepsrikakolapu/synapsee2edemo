@@ -1,0 +1,578 @@
+{
+	"name": "PatientParquetFlatten_Large",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate/FHIR"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "healthcare",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "112g",
+			"driverCores": 16,
+			"executorMemory": "112g",
+			"executorCores": 16,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "c4944c0c-93bf-4796-ab44-b83b877f3641"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/7e416de3-c506-4776-8270-83fd73c6cc37/resourceGroups/syne2e/providers/Microsoft.Synapse/workspaces/health/bigDataPools/healthcare",
+				"name": "healthcare",
+				"type": "Spark",
+				"endpoint": "https://health.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/healthcare",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 16,
+				"memory": 112,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"curated_location = \"abfss://curated@medicaldl.dfs.core.windows.net/fhir/30tbCurated/\"\r\n",
+					"processed_location = \"abfss://processed@medicaldl.dfs.core.windows.net/fhir/30tbdataset/\"\r\n",
+					"write_mode=\"overwrite\""
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Patient_df=spark.read.parquet(processed_location+\"Patient/\")"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"#display(Patient_df.limit(10))"
+				],
+				"execution_count": 25
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Patient_df.printSchema()"
+				],
+				"execution_count": 26
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import explode\r\n",
+					"\r\n",
+					"Patient_main_df = Patient_df.select(\r\n",
+					"    \"id\",\"resourceType\",\"birthDate\",\"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",\r\n",
+					"    \"multipleBirthInteger\",\"text.div\",\"text.status\",\"maritalStatus.text\").toDF(*(\r\n",
+					"    \"Patient_id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",\"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\"))"
+				],
+				"execution_count": 8
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"display(Patient_main_df.limit(10))"
+				],
+				"execution_count": 14
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Patient_main_df.write.mode(write_mode).parquet(curated_location+\"Patient_main/\")"
+				],
+				"execution_count": 9
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import explode\r\n",
+					"\r\n",
+					"Patient_identifier_explode_df = Patient_df.select(\r\n",
+					"    \"id\",\"resourceType\",\"birthDate\",\"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",\r\n",
+					"    \"multipleBirthInteger\",\"text.div\",\"text.status\",\"maritalStatus.text\",\r\n",
+					"    explode(Patient_df.identifier)).toDF(*(\"id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",  \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"identifier\"))\r\n",
+					"\r\n",
+					"\r\n",
+					"Patient_identifier_df = Patient_identifier_explode_df.select(\"id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\", \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"identifier.*\" )    \r\n",
+					"\r\n",
+					"Patient_identifier_explode2_df = Patient_identifier_df.select(\r\n",
+					"    \"id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",  \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"type.text\",\r\n",
+					"    explode(Patient_identifier_df.type.coding)).toDF(*(\"Patient_id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",  \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"type_text\",\"type\"))  \r\n",
+					"\r\n",
+					"Patient_identifier_df = Patient_identifier_explode2_df.select(\"Patient_id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",  \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"type_text\",\"type.*\" )  "
+				],
+				"execution_count": 18
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Patient_identifier_df.printSchema()"
+				],
+				"execution_count": 16
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"display(Patient_identifier_df.limit(10))"
+				],
+				"execution_count": 19
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Patient_identifier_df.count()"
+				],
+				"execution_count": 30
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"--CREATE DATABASE fhirlakedb\r\n",
+					"drop table fhirlakedb.Patient_identifier"
+				],
+				"execution_count": 45
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Patient_identifier_df.write.mode(write_mode).parquet(curated_location+\"Patient_identifier/\")\r\n",
+					"#Patient_identifier_df.write.format(\"delta\").saveAsTable(\"fhirlakedb.Patient_identifier\")\r\n",
+					"#Patient_identifier_df.write.format(\"delta\").save(curated_location+\"Condition_clinicalStatus_delta/\")"
+				],
+				"execution_count": 20
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import explode\r\n",
+					"\r\n",
+					"Patient_name_explode_df = Patient_df.select(\r\n",
+					"    \"id\",\"resourceType\",\"birthDate\",\"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",\r\n",
+					"    \"multipleBirthInteger\",\"text.div\",\"text.status\",\"maritalStatus.text\",\r\n",
+					"    explode(Patient_df.name)).toDF(*(\"id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",  \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"name\"))\r\n",
+					"\r\n",
+					"Patient_name_df = Patient_name_explode_df.select(\"id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\", \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"name.*\" )    \r\n",
+					"\r\n",
+					"Patient_name_df = Patient_name_df.select(\r\n",
+					"    \"id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",  \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"family\",\"use\",\r\n",
+					"    explode(Patient_name_df.given)).toDF(*(\"Patient_id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",  \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"name_family\",\"name_use\",\"given\")) \r\n",
+					""
+				],
+				"execution_count": 24
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Patient_name_df.printSchema()"
+				],
+				"execution_count": 22
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"display(Patient_name_df.limit(10))"
+				],
+				"execution_count": 23
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Patient_name_df.write.mode(write_mode).parquet(curated_location+\"Patient_name/\")\r\n",
+					"#Patient_name_df.write.format(\"delta\").saveAsTable(\"fhirlakedb.Patient_name\")\r\n",
+					"#Patient_identifier_df.write.format(\"delta\").save(curated_location+\"Condition_clinicalStatus_delta/\")"
+				],
+				"execution_count": 25
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import explode\r\n",
+					"\r\n",
+					"Patient_extension_explode_df = Patient_df.select(\r\n",
+					"    \"id\",\"resourceType\",\"birthDate\",\"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",\r\n",
+					"    \"multipleBirthInteger\",\"text.div\",\"text.status\",\"maritalStatus.text\",\r\n",
+					"    explode(Patient_df.extension)).toDF(*(\"Patient_id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",  \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"extension\"))\r\n",
+					"\r\n",
+					"Patient_extension_df = Patient_extension_explode_df.select(\"Patient_id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\", \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"extension.url\",\r\n",
+					"    \"extension.valueAddress.city\",\"extension.valueAddress.country\",\r\n",
+					"    \"extension.valueAddress.state\",\r\n",
+					"    \"extension.valueDecimal\",\"extension.valueString\" )    \r\n",
+					""
+				],
+				"execution_count": 26
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Patient_extension_df.printSchema()"
+				],
+				"execution_count": 27
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"display(Patient_extension_df.limit(10))"
+				],
+				"execution_count": 28
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Patient_extension_df.write.mode(write_mode).parquet(curated_location+\"Patient_extension/\")\r\n",
+					"#Patient_extension_df.write.format(\"delta\").saveAsTable(\"fhirlakedb.Patient_extension\")\r\n",
+					"#Patient_identifier_df.write.format(\"delta\").save(curated_location+\"Condition_clinicalStatus_delta/\")"
+				],
+				"execution_count": 31
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import explode\r\n",
+					"\r\n",
+					"Patient_telecom_explode_df = Patient_df.select(\r\n",
+					"    \"id\",\"resourceType\",\"birthDate\",\"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",\r\n",
+					"    \"multipleBirthInteger\",\"text.div\",\"text.status\",\"maritalStatus.text\",\r\n",
+					"    explode(Patient_df.telecom)).toDF(*(\"Patient_id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\",  \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"telecom\"))\r\n",
+					"\r\n",
+					"Patient_telecom_df = Patient_telecom_explode_df.select(\"Patient_id\",\"resourceType\",\"birthDate\",\r\n",
+					"    \"deceasedDateTime\",\"gender\",\"multipleBirthBoolean\", \"multipleBirthInteger\",\r\n",
+					"    \"text_div\",\"text_status\",\"maritalStatus_text\",\"telecom.system\",\r\n",
+					"    \"telecom.use\",\"telecom.value\" )    \r\n",
+					""
+				],
+				"execution_count": 29
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"display(Patient_telecom_df.limit(10))"
+				],
+				"execution_count": 33
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Patient_telecom_df.write.mode(write_mode).parquet(curated_location+\"Patient_telecom/\")\r\n",
+					"#Patient_telecom_df.write.format(\"delta\").saveAsTable(\"fhirlakedb.Patient_telecom\")\r\n",
+					"#Patient_identifier_df.write.format(\"delta\").save(curated_location+\"Condition_clinicalStatus_delta/\")"
+				],
+				"execution_count": 34
+			}
+		]
+	}
+}

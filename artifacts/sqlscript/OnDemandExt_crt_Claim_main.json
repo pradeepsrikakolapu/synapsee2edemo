@@ -1,0 +1,20 @@
+{
+	"name": "OnDemandExt_crt_Claim_main",
+	"properties": {
+		"folder": {
+			"name": "Performance Tuning"
+		},
+		"content": {
+			"query": "IF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'SynapseParquetFormat') \n\tCREATE EXTERNAL FILE FORMAT [SynapseParquetFormat] \n\tWITH ( FORMAT_TYPE = PARQUET)\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'processed_medicaldl_dfs_core_windows_net') \n\tCREATE EXTERNAL DATA SOURCE [processed_medicaldl_dfs_core_windows_net] \n\tWITH (\n\t\tLOCATION = 'abfss://processed@medicaldl.dfs.core.windows.net' \n\t)\nGO\n\ndrop EXTERNAL TABLE dbo.Claim_main\ndrop EXTERNAL TABLE serverlessext.Claim_main\ndrop EXTERNAL TABLE serverlessext.Observation_main\ndrop EXTERNAL TABLE OnDemandExt.Claim_main\n\nCREATE EXTERNAL TABLE OnDemandExt.Claim_main (\n\t[Claim_id] nvarchar(64),\n\t[resourceType] nvarchar(64),\n\t[status] nvarchar(64),\n\t[billablePeriod_end] nvarchar(64),\n\t[billablePeriod_start] nvarchar(64),\n\t[created] nvarchar(64),\n\t[patient_display] nvarchar(64),\n\t[patient_id_reference] nvarchar(64),\n\t[prescription_reference] nvarchar(64),\n\t[provider_display] nvarchar(64),\n\t[provider_org_id_reference] nvarchar(64),\n\t[total_currency] nvarchar(64),\n\t[total_value] float,\n\t[use] nvarchar(64)\n\t)\n\tWITH (\n\tLOCATION = 'fhir/StreamingProcessed/Claim_main_delta/',\n\tDATA_SOURCE = [processed_medicaldl_dfs_core_windows_net],\n\tFILE_FORMAT = [SynapseParquetFormat]\n\t)\nGO\n\n\nSELECT TOP 100 * FROM OnDemandExt.Claim_main\nGO\n\nSELECT count(*) FROM OnDemandExt.Claim_main --16601000961\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "fhirserverlessdb",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

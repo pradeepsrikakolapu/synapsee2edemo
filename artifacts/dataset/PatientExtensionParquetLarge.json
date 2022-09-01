@@ -1,0 +1,21 @@
+{
+	"name": "PatientExtensionParquetLarge",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "health-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "fhir/30tbCurated/PatientExtension",
+				"fileSystem": "curated"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

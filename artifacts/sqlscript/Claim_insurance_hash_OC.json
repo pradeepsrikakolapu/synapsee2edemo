@@ -1,0 +1,20 @@
+{
+	"name": "Claim_insurance_hash_OC",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"content": {
+			"query": "IF OBJECT_ID(N'healthcare.[fhir].[Claim_insurance_hash]') IS NOT NULL\nBEGIN\nDROP TABLE [fhir].[Claim_insurance_hash]\nEND\nGO\n\nSELECT top 10 \n\tCAST([Claim_id] AS [nvarchar](64))  Claim_id,\n\tCAST([insurance_coverage.display] AS [nvarchar](64))  insurance_coverage_display,\n\tCASE when [insurance_coverage.display] = 'No_Insurance' THEN 0 ELSE 1 END AS HasInsurance_coverage,\n\t[insurance_focal],\n\tCAST([insurance_sequence] AS [int])  insurance_sequence\nFROM [staging].[Claim_insurance_heap]\nwhere [insurance_coverage.display] <> 'No_Insurance';\n\nCREATE TABLE [fhir].[Claim_insurance_hash]\nWITH\n(\n    CLUSTERED COLUMNSTORE INDEX,\n    DISTRIBUTION = HASH(Claim_id)\n)\nAS SELECT  \n\tCAST([Claim_id] AS [nvarchar](64))  Claim_id,\n\tCAST([insurance_coverage.display] AS [nvarchar](64))  insurance_coverage_display,\n\tCASE when [insurance_coverage.display] = 'No_Insurance' THEN 0 ELSE 1 END AS HasInsurance_coverage,\n\t[insurance_focal],\n\tCAST([insurance_sequence] AS [int])  insurance_sequence\nFROM [staging].[Claim_insurance_heap]\n;\n\nselect top 10 * from [fhir].[Claim_insurance_hash];\n\nCREATE TABLE [fhir].[Claim_insurance_1_hash]\nWITH\n(\n    CLUSTERED COLUMNSTORE INDEX,\n    DISTRIBUTION = HASH(Claim_id)\n)\nAS SELECT \n\tCAST([Claim_id] AS [nvarchar](64))  Claim_id,\n\tCAST([insurance_coverage.display] AS [nvarchar](64))  insurance_coverage_display,\n\t[insurance_focal],\n\tCAST([insurance_sequence] AS [int])  insurance_sequence\nFROM [staging].[Claim_insurance_heap];\n\nselect top 10 * from [fhir].[Claim_insurance_hash];\n\n/*\nCREATE TABLE [staging].[Claim_insurance_heap]\n( \n\t[Claim_id] [nvarchar](4000)  NULL,\n\t[insurance_coverage.display] [nvarchar](4000)  NULL,\n\t[insurance_focal] [bit]  NULL,\n\t[insurance_sequence] [bigint]  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\n*/",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "healthcare",
+				"poolName": "healthcare"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

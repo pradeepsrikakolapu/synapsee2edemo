@@ -1,0 +1,21 @@
+{
+	"name": "ObservationCategoryParquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "health-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "fhir/dmCurated/1tbdataset/ObservationCategory",
+				"fileSystem": "cruated"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

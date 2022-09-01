@@ -1,0 +1,21 @@
+{
+	"name": "ObservationMain_LargeParquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "health-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "fhir/30tbCurated/Observation_main",
+				"fileSystem": "curated"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

@@ -1,0 +1,12 @@
+{
+	"name": "PatientExtensionParquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SynapseDedicatedSQLHealthcare",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": []
+	}
+}

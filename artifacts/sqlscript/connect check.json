@@ -1,0 +1,20 @@
+{
+	"name": "connect check",
+	"properties": {
+		"folder": {
+			"name": "Performance Tuning/ResourceUtilization"
+		},
+		"content": {
+			"query": "SELECT\n     sdes.session_id\n    ,sdes.login_time\n    ,sdes.last_request_start_time\n    ,sdes.last_request_end_time\n    ,sdes.is_user_process\n    ,sdes.host_name\n    ,sdes.program_name\n    ,sdes.login_name\n    ,sdes.status\n\n    ,sdec.num_reads\n    ,sdec.num_writes\n    ,sdec.last_read\n    ,sdec.last_write\n    ,sdes.reads\n    ,sdes.logical_reads\n    ,sdes.writes\n\n    ,sdest.DatabaseName\n    ,sdest.ObjName\n    ,sdes.client_interface_name\n    ,sdes.nt_domain\n    ,sdes.nt_user_name\n    ,sdec.client_net_address\n    ,sdec.local_net_address\n    ,sdest.Query\n    ,KillCommand  = 'Kill '+ CAST(sdes.session_id  AS VARCHAR)\nFROM sys.dm_exec_sessions AS sdes\n\nINNER JOIN sys.dm_exec_connections AS sdec\n        ON sdec.session_id = sdes.session_id\n\nCROSS APPLY (\n\n    SELECT DB_NAME(dbid) AS DatabaseName\n        ,OBJECT_NAME(objectid) AS ObjName\n        ,COALESCE((\n            SELECT TEXT AS [processing-instruction(definition)]\n            FROM sys.dm_exec_sql_text(sdec.most_recent_sql_handle)\n            FOR XML PATH('')\n                ,TYPE\n            ), '') AS Query\n\n    FROM sys.dm_exec_sql_text(sdec.most_recent_sql_handle)\n\n) sdest\nWHERE sdes.session_id <> @@SPID\n  AND sdest.DatabaseName ='SQLPool01'\n--ORDER BY sdes.last_request_start_time DESC\n\nselect * from sys.dm_exec_sessions where status <> 'sleeping'\n\nselect * from sys.dm_exec_connections",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SQLPool01",
+				"poolName": "SQLPool01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

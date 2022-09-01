@@ -1,0 +1,20 @@
+{
+	"name": "WorkloadManagement4PBI",
+	"properties": {
+		"folder": {
+			"name": "Performance Tuning/WorkloadManagement"
+		},
+		"content": {
+			"query": "SELECT \n    wc.name AS 'ClassifierName'\n    ,wc.group_name AS 'GroupName'\n    ,wc.importance AS 'ClassifierImportance'\n    ,wg.importance AS 'GroupImportance'\n    ,wcd.classifier_type\n    ,wcd.classifier_value\n    ,wg.min_percentage_resource\n    ,wgs.effective_min_percentage_resource\n    ,wg.cap_percentage_resource\n    ,wgs.effective_cap_percentage_resource\n    ,wg.request_min_resource_grant_percent\n    ,wgs.effective_request_min_resource_grant_percent\n    ,wg.request_max_resource_grant_percent\n    ,wgs.effective_request_max_resource_grant_percent\n    ,wgs.total_request_count\n    ,wgs.total_shared_resource_requests\n    ,wgs.total_queued_request_count\n    ,wgs.total_request_execution_timeouts\n    ,wgs.total_resource_grant_timeouts\nFROM sys.workload_management_workload_classifiers wc\nJOIN sys.workload_management_workload_classifier_details wcd\nON wc.classifier_id = wcd.classifier_id\nJOIN sys.dm_workload_management_workload_groups_stats wgs\nON wgs.name = wc.group_name\nJOIN sys.workload_management_workload_groups wg\nON wg.group_id = wgs.group_id\n\nSELECT * FROM \n(SELECT \n    wc.name AS 'ClassifierName'\n    ,wc.group_name AS 'GroupName'\n    ,wc.importance AS 'ClassifierImportance'\n    ,wg.importance AS 'GroupImportance'\n    ,wcd.classifier_type\n    ,wcd.classifier_value\n    ,wg.min_percentage_resource\n    ,wgs.effective_min_percentage_resource\n    ,wg.cap_percentage_resource\n    ,wgs.effective_cap_percentage_resource\n    ,wg.request_min_resource_grant_percent\n    ,wgs.effective_request_min_resource_grant_percent\n    ,wg.request_max_resource_grant_percent\n    ,wgs.effective_request_max_resource_grant_percent\n    ,wgs.total_request_count\n    ,wgs.total_shared_resource_requests\n    ,wgs.total_queued_request_count\n    ,wgs.total_request_execution_timeouts\n    ,wgs.total_resource_grant_timeouts\nFROM sys.workload_management_workload_classifiers wc\nJOIN sys.workload_management_workload_classifier_details wcd\nON wc.classifier_id = wcd.classifier_id\nJOIN sys.dm_workload_management_workload_groups_stats wgs\nON wgs.name = wc.group_name\nJOIN sys.workload_management_workload_groups wg\nON wg.group_id = wgs.group_id\n) AS Source\nPIVOT (max(Classifier_Value) FOR Classifier_Type in ([membername],[wlm_label],[wlm_context],[start_time],[end_time])) AS PivotTable\n\nSELECT * FROM \n(SELECT \n    wc.name AS 'ClassifierName'\n    ,wc.group_name AS 'GroupName'\n    ,wc.importance AS 'ClassifierImportance'\n    ,wg.importance AS 'GroupImportance'\n    ,wcd.classifier_type\n    ,wcd.classifier_value\n    ,wg.min_percentage_resource\n    ,wgs.effective_min_percentage_resource\n    ,wg.cap_percentage_resource\n    ,wgs.effective_cap_percentage_resource\n    ,wg.request_min_resource_grant_percent\n    ,wgs.effective_request_min_resource_grant_percent\n    ,wg.request_max_resource_grant_percent\n    ,wgs.effective_request_max_resource_grant_percent\n    ,wgs.total_request_count\n    ,wgs.total_shared_resource_requests\n    ,wgs.total_queued_request_count\n    ,wgs.total_request_execution_timeouts\n    ,wgs.total_resource_grant_timeouts\nFROM sys.workload_management_workload_classifiers wc\nJOIN sys.workload_management_workload_classifier_details wcd\nON wc.classifier_id = wcd.classifier_id\nJOIN sys.dm_workload_management_workload_groups_stats wgs\nON wgs.name = wc.group_name\nJOIN sys.workload_management_workload_groups wg\nON wg.group_id = wgs.group_id\n) AS Source\nPIVOT (max(Classifier_Value) FOR Classifier_Type in ([membername],[wlm_label],[wlm_context],[start_time],[end_time])) AS PivotTable\nunion\nselect 'filterrowClassifiername','filterrowGroupName','normal','normal',0,1,0,1,0,1,0,1,0,1,0,1,0,'membername','wlm_lable','wlm_context','start_time','end_time'\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SQLPool01",
+				"poolName": "SQLPool01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

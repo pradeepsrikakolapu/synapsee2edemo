@@ -1,0 +1,429 @@
+{
+	"name": "FHIR_Pipeline4Patient_DataFlow_OC",
+	"properties": {
+		"activities": [
+			{
+				"name": "NDJSON_Ingestion_Patient",
+				"type": "SynapseNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebook": {
+						"referenceName": "Patient_Ingestion_NDJSON2Parquet",
+						"type": "NotebookReference"
+					},
+					"snapshot": true
+				}
+			},
+			{
+				"name": "PatientParquet2Sink",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "NDJSON_Ingestion_Patient",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "PatientJSON_Flatten_large",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine",
+					"runConcurrently": true
+				}
+			},
+			{
+				"name": "PatientAddress_large2SQL",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "PatientParquet2Sink",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "fhir/30tbCurated/PatientAddress",
+							"wildcardFileName": "*.parquet",
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "SqlDWSink",
+						"allowCopyCommand": true,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "health-WorkspaceDefaultStorage",
+							"type": "LinkedServiceReference"
+						},
+						"path": "synapse/synapse/workspaces/staging"
+					},
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "id",
+									"type": "String"
+								},
+								"sink": {
+									"name": "id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "address.city",
+									"type": "String"
+								},
+								"sink": {
+									"name": "address.city",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "address.country",
+									"type": "String"
+								},
+								"sink": {
+									"name": "address.country",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "address.extension.extension.url",
+									"type": "String"
+								},
+								"sink": {
+									"name": "address.extension.extension.url",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "address.extension.extension.valueDecimal",
+									"type": "Double"
+								},
+								"sink": {
+									"name": "address.extension.extension.valueDecimal",
+									"type": "Double"
+								}
+							},
+							{
+								"source": {
+									"name": "address.extension.url",
+									"type": "String"
+								},
+								"sink": {
+									"name": "address.extension.url",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "address.postalCode",
+									"type": "String"
+								},
+								"sink": {
+									"name": "address.postalCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "address.state",
+									"type": "String"
+								},
+								"sink": {
+									"name": "address.state",
+									"type": "String"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "PatientAddressParquetLarge",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "PatientAddressSQL",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "PatientIdentifier_large2SQL",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "PatientParquet2Sink",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "fhir/30tbCurated/PatientIdentifier",
+							"wildcardFileName": "*.parquet",
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "SqlDWSink",
+						"allowCopyCommand": true,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "health-WorkspaceDefaultStorage",
+							"type": "LinkedServiceReference"
+						},
+						"path": "synapse/synapse/workspaces/staging"
+					},
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "patient_id",
+									"type": "String"
+								},
+								"sink": {
+									"name": "patient_id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "birthDate",
+									"type": "String"
+								},
+								"sink": {
+									"name": "birthDate",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "deceasedDateTime",
+									"type": "String"
+								},
+								"sink": {
+									"name": "deceasedDateTime",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "gender",
+									"type": "String"
+								},
+								"sink": {
+									"name": "gender",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "text",
+									"type": "String"
+								},
+								"sink": {
+									"name": "text",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "multipleBirthBoolean",
+									"type": "Boolean"
+								},
+								"sink": {
+									"name": "multipleBirthBoolean",
+									"type": "Boolean"
+								}
+							},
+							{
+								"source": {
+									"name": "multipleBirthInteger",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "multipleBirthInteger",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"name": "resourceType",
+									"type": "String"
+								},
+								"sink": {
+									"name": "resourceType",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "div",
+									"type": "String"
+								},
+								"sink": {
+									"name": "div",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "status",
+									"type": "String"
+								},
+								"sink": {
+									"name": "status",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "identifier.system",
+									"type": "String"
+								},
+								"sink": {
+									"name": "identifier.system",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "identifier.type.coding.code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "identifier.type.coding.code",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "identifier.type.coding.display",
+									"type": "String"
+								},
+								"sink": {
+									"name": "identifier.type.coding.display",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "identifier.type.coding.system",
+									"type": "String"
+								},
+								"sink": {
+									"name": "identifier.type.coding.system",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "identifier.type.text",
+									"type": "String"
+								},
+								"sink": {
+									"name": "identifier.type.text",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "identifier.value",
+									"type": "String"
+								},
+								"sink": {
+									"name": "identifier.value",
+									"type": "String"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "PatientIdentifierParquetLarge",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "PatientIdentifierSQLLarge",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"annotations": []
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"name": "crt_v_pbi_ClaimInsurance_OC",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"content": {
+			"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE VIEW [fhir].[v_pbi_ClaimInsurance]\nAS SELECT \n    cm.[Claim_id],\n    cm.patient_id_reference,\n    cm.provider_org_id_reference,\n    cm.total_value,\n    YEAR([billablePeriod_start_date]) [Claim Year],\n    [billablePeriod_start_date] AS [Claim Date],\n    ci.insurance_coverage_display,\n    ci.HasInsurance_coverage AS HasInsurance\n  FROM [fhir].[Claim_main_hash] cm\n  INNER JOIN [fhir].[Claim_insurance_hash] ci\n    ON cm.Claim_id = ci.Claim_id;\nGO\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "healthcare",
+				"poolName": "healthcare"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

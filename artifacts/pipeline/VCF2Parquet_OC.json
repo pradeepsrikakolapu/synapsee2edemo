@@ -1,0 +1,37 @@
+{
+	"name": "VCF2Parquet_OC",
+	"properties": {
+		"activities": [
+			{
+				"name": "vcf2parquet1000genomes",
+				"type": "SynapseNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebook": {
+						"referenceName": "vcf2parquet1000genomes",
+						"type": "NotebookReference"
+					},
+					"snapshot": true,
+					"sparkPool": {
+						"referenceName": "healthcare",
+						"type": "BigDataPoolReference"
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-05-19T16:37:50Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
+}

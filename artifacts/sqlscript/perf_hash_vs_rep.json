@@ -1,0 +1,20 @@
+{
+	"name": "perf_hash_vs_rep",
+	"properties": {
+		"folder": {
+			"name": "Performance Tuning"
+		},
+		"content": {
+			"query": "SELECT \nTOP (1000001) [t1].[HasInsurance]\nFROM \n((\nselect [_].[Claim_id] as [Claim_id],\n    [_].[patient_id_reference] as [patient_id_reference],\n    [_].[provider_org_id_reference] as [provider_org_id_reference],\n    [_].[total_value] as [totalvalue],\n    [_].[Claim Year] as [Claim Year],\n    [_].[Claim Date] as [Claim Date],\n    [_].[insurance_coverage_display] as [InsuranceCompany],\n    [_].[HasInsurance] as [HasInsurance]\nfrom [fhir].[v_pbi_ClaimInsurance] as [_]\n) AS [t1]\n INNER JOIN \n(\nselect [$Table].[Patient_id] as [Patient_id],\n    [$Table].[BirthDate] as [BirthDate],\n    [$Table].[DeceasedDate] as [DeceasedDate],\n    [$Table].[Gender] as [Gender],\n    [$Table].[Marital Status] as [Marital Status],\n    [$Table].[age] as [age],\n    [$Table].[Age Bin] as [Age Bin]\nfrom [fhir].[v_pbi_Patient] as [$Table]\n) AS [t5] on \n(\n[t1].[patient_id_reference] = [t5].[Patient_id]\n)\n)\nWHERE \n(\n(\n(\n[t5].[Gender] = N'male'\n)\n AND \n(\n[t5].[Marital Status] = N'M'\n)\n)\n AND \n(\n([t1].[Claim Year] <= 2021)\n AND \n([t1].[Claim Year] >= 2000)\n)\n)\nGROUP BY [t1].[HasInsurance]\n\nDROP VIEW [fhir].[v_pbi_Patient]\nGO\n\nSET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE VIEW [fhir].[v_pbi_Patient]\nAS SELECT\n    Patient_id,\n    birthDate BirthDate,\n    deceasedDatetime DeceasedDate,\n    gender Gender,\n    MaritalStatus_text AS [Marital Status],\n    Datediff(yy,birthDate,getdate()) age, \n    CASE \n        WHEN Datediff(yy,birthDate,getdate()) >0 AND Datediff(yy,birthDate,getdate()) <= 10 THEN 10\n        WHEN Datediff(yy,birthDate,getdate()) >10 AND Datediff(yy,birthDate,getdate()) <= 20 THEN 20\n        WHEN Datediff(yy,birthDate,getdate()) >20 AND Datediff(yy,birthDate,getdate()) <= 30 THEN 30\n        WHEN Datediff(yy,birthDate,getdate()) >30 AND Datediff(yy,birthDate,getdate()) <= 40 THEN 40\n        WHEN Datediff(yy,birthDate,getdate()) >40 AND Datediff(yy,birthDate,getdate()) <= 50 THEN 50\n        WHEN Datediff(yy,birthDate,getdate()) >50 AND Datediff(yy,birthDate,getdate()) <= 60 THEN 60\n        WHEN Datediff(yy,birthDate,getdate()) >60 AND Datediff(yy,birthDate,getdate()) <= 70 THEN 70\n        WHEN Datediff(yy,birthDate,getdate()) >70 AND Datediff(yy,birthDate,getdate()) <= 80 THEN 80\n        WHEN Datediff(yy,birthDate,getdate()) >80 AND Datediff(yy,birthDate,getdate()) <= 90 THEN 90\n        WHEN Datediff(yy,birthDate,getdate()) >90 AND Datediff(yy,birthDate,getdate()) <= 100 THEN 100\n        WHEN Datediff(yy,birthDate,getdate()) >100 THEN 110\n    ELSE 0 END AS [Age Bin]\n--FROM fhir.Patient_main_rep;\nFROM fhir.Patient_main_hash\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "healthcare",
+				"poolName": "healthcare"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"name": "Observation_parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "health-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "parquet/ViaSynapsePipeline",
+				"fileSystem": "fhir"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

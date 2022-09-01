@@ -1,0 +1,20 @@
+{
+	"name": "Get Database SLO DWUs",
+	"properties": {
+		"folder": {
+			"name": "Performance Tuning/SystemProfile"
+		},
+		"content": {
+			"query": "/***************************************************************************************************\nCreate Date:        08-20-2020\nAuthor:             Casey Karst MSFT\nDescription:        This query runs against the MASTER DATABASE and returns the SLO (DWUs) for each \n\t\t\t\t\tDW attached to the logical server.\n****************************************************************************************************\nSUMMARY OF CHANGES\nDate(yyyy-mm-dd)    Author              Comments\n------------------- ------------------- ------------------------------------------------------------\n08-20-2020          Casey Karst\t\t\tAdded      \n***************************************************************************************************/\n\nSELECT  db.name [Database]\n,\t    ds.edition [Edition]\n,\t    ds.service_objective [Service Objective]\nFROM    sys.database_service_objectives   AS ds\nJOIN    sys.databases                     AS db ON ds.database_id = db.database_id",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "SQLPool01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

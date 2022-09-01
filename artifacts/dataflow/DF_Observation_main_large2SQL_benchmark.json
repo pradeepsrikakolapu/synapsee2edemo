@@ -1,0 +1,48 @@
+{
+	"name": "DF_Observation_main_large2SQL_benchmark",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ObservationMain_LargeParquet",
+						"type": "DatasetReference"
+					},
+					"name": "ObservationMainParquet"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ObservationMainSQL",
+						"type": "DatasetReference"
+					},
+					"name": "SQLObservationMainLargeBenchmark"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> ObservationMainParquet",
+				"ObservationMainParquet sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     staged: true,",
+				"     allowCopyCommand: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> SQLObservationMainLargeBenchmark"
+			]
+		}
+	}
+}

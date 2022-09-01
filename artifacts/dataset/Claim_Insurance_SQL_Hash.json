@@ -1,0 +1,87 @@
+{
+	"name": "Claim_Insurance_SQL_Hash",
+	"properties": {
+		"annotations": [],
+		"type": "SqlPoolTable",
+		"schema": [
+			{
+				"name": "id",
+				"type": "nvarchar"
+			},
+			{
+				"name": "resourceType",
+				"type": "nvarchar"
+			},
+			{
+				"name": "status",
+				"type": "nvarchar"
+			},
+			{
+				"name": "billablePeriod_end",
+				"type": "nvarchar"
+			},
+			{
+				"name": "billablePeriod_start",
+				"type": "nvarchar"
+			},
+			{
+				"name": "created",
+				"type": "nvarchar"
+			},
+			{
+				"name": "patient_display",
+				"type": "nvarchar"
+			},
+			{
+				"name": "patient_reference",
+				"type": "nvarchar"
+			},
+			{
+				"name": "prescription_reference",
+				"type": "nvarchar"
+			},
+			{
+				"name": "provider_display",
+				"type": "nvarchar"
+			},
+			{
+				"name": "provider_reference",
+				"type": "nvarchar"
+			},
+			{
+				"name": "total_currency",
+				"type": "nvarchar"
+			},
+			{
+				"name": "total_value",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "use",
+				"type": "nvarchar"
+			},
+			{
+				"name": "display",
+				"type": "nvarchar"
+			},
+			{
+				"name": "focal",
+				"type": "bit"
+			},
+			{
+				"name": "sequence",
+				"type": "bigint",
+				"precision": 19
+			}
+		],
+		"typeProperties": {
+			"schema": "fhir",
+			"table": "ClaimInsurance_hash"
+		},
+		"sqlPool": {
+			"referenceName": "healthcare",
+			"type": "SqlPoolReference"
+		}
+	}
+}

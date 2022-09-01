@@ -1,0 +1,20 @@
+{
+	"name": "ObservationCategorySQL",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "health-WorkspaceDefaultSqlServer",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"DBName": "healthcare"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "fhir",
+			"table": "ObservationCategory"
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

@@ -1,0 +1,20 @@
+{
+	"name": "RepTable status",
+	"properties": {
+		"folder": {
+			"name": "Performance Tuning/FeatureCheck"
+		},
+		"content": {
+			"query": "SELECT [Schema]=schema_name(schema_id),[ReplicatedTable] = t.[name], c.[state]\nFROM sys.tables t \nJOIN sys.pdw_replicated_table_cache_state c \nON c.object_id = t.object_id\nJOIN sys.pdw_table_distribution_properties p\nON p.object_id = t.object_id\nWHERE 1=1\nAND c.[state] = 'NotReady'\nAND p.[distribution_policy_desc] = 'REPLICATE'\norder by 1,2\n\nSELECT TOP (100) [ProductId]\n,[Seasonality]\n,[Price]\n,[Profit]\n FROM [wwi].[Product]\n\n update wwi.Product set price=34.49 where ProductId=1\n -- the update makes the rep table ",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SQLPool01",
+				"poolName": "SQLPool01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

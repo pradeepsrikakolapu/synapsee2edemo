@@ -1,0 +1,20 @@
+{
+	"name": "Crt_WLM_Classifier",
+	"properties": {
+		"folder": {
+			"name": "Performance Tuning/WorkloadManagement"
+		},
+		"content": {
+			"query": "-- part 1\n-- ref: https://docs.microsoft.com/en-us/azure/synapse-analytics/sql-data-warehouse/quickstart-create-a-workload-classifier-tsql?view=azure-sqldw-latest\n\n-- create login for CEO (run within master database)\nIF NOT EXISTS (SELECT * FROM sys.sql_logins WHERE name = 'TheCEO')\nBEGIN\nCREATE LOGIN [TheCEO] WITH PASSWORD='Open,ses1234'\nEND\n;\n\n--Create user, \"TheCEO\", in the app database\nIF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = 'TheCEO')\nBEGIN\nCREATE USER [TheCEO] FOR LOGIN [TheCEO]\nEND\n;\n\n-- Create CEO classifier with high importance (run in app database)\nDROP WORKLOAD CLASSIFIER [wgcTheCEO];\n\nCREATE WORKLOAD CLASSIFIER [wgcTheCEO]\nWITH (WORKLOAD_GROUP = 'xlargerc'\n      ,MEMBERNAME = 'TheCEO'\n      ,IMPORTANCE = HIGH);\n\n--View existing classifiers\nSELECT * FROM sys.workload_management_workload_classifiers\n\n-- Part 2\n-- ref:  https://docs.microsoft.com/en-us/sql/t-sql/statements/create-workload-classifier-transact-sql?toc=/azure/synapse-analytics/sql-data-warehouse/toc.json&bc=/azure/synapse-analytics/sql-data-warehouse/breadcrumb/toc.json&view=azure-sqldw-latest&preserve-view=true     \nCREATE WORKLOAD CLASSIFIER wcELTLoads WITH  \n( WORKLOAD_GROUP = 'wgDataLoad'\n ,MEMBERNAME     = 'ELTRole'  \n ,WLM_LABEL      = 'dimension_loads' )\n\nSELECT COUNT(*) \n  FROM DimCustomer\n  OPTION (LABEL = 'dimension_loads')",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SQLPool01",
+				"poolName": "SQLPool01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

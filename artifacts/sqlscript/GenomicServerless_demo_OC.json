@@ -1,0 +1,20 @@
+{
+	"name": "GenomicServerless_demo_OC",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"content": {
+			"query": "create database GenomicDB;\nuse GenomicDB;\n\ncreate schema genomic;\n\ncreate view genomic.vcftab as\nSELECT *\nFROM\n    OPENROWSET(\n        BULK 'https://medicaldl.dfs.core.windows.net/processed/Genomic/dmProcessed/smallVFC2Parquet1/*.parquet',\n        FORMAT = 'PARQUET'\n    ) AS [result]\n\nselect count(*) from genomic.vcftab \n\nselect top 100 * from genomic.vcftab",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "GenomicDB",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

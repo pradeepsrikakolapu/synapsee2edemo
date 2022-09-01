@@ -1,0 +1,20 @@
+{
+	"name": "Serverless_data_transformation_OC",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"content": {
+			"query": "-- Patient_main table has duplicate records\nSELECT count(*)  FROM [fhir_logicaldw].[dbo].[patient_main_spark_parquet] -- 13515370\nSELECT count(distinct patient_id)   FROM [fhir_logicaldw].[dbo].[patient_main_spark_parquet]  --13511778\n\ndrop  EXTERNAL TABLE serverlessext.patient_dedupe ;\n-- create a transformation table with deduplicated records\nCREATE EXTERNAL TABLE serverlessext.patient_dedupe \n\tWITH (\n\tLOCATION = 'fhir/logicalDW/Patient_main_parquet_dedupe/',\n\tDATA_SOURCE = [curated_medicaldl_dfs_core_windows_net],\n\tFILE_FORMAT = [SynapseParquetFormat]\n\t) as \nSELECT patient_id,resourceType,birthdate,deceaseddatetime,gender,multiplebirthboolean,multiplebirthinteger,text_div,text_status,maritalstatus_text\nfrom (\nSELECT *\n, DupRank = ROW_NUMBER() OVER (\n              PARTITION BY patient_id\n              ORDER BY (SELECT NULL)\n            )\nFROM [fhir_logicaldw].[dbo].[patient_main_spark_parquet]\n)  as T\nWHERE DupRank <2  \n-- check result\nselect count(*) FROM serverlessext.patient_dedupe\n\n\n---------------------------------------------------\n-- Create aggreation table with serverless\nSELECT count(*)\nFROM\n    OPENROWSET(\n        BULK 'https://medicaldl.dfs.core.windows.net/curated/fhir/logicalDW/Claim_main_delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n\ndrop EXTERNAL TABLE serverlessext.claimvalue_by_provider \ngo\n\nCREATE EXTERNAL TABLE serverlessext.claimvalue_by_provider \n\tWITH (\n\tLOCATION = 'fhir/logicalDW/claimvalue_by_provider/',\n\tDATA_SOURCE = [curated_medicaldl_dfs_core_windows_net],\n\tFILE_FORMAT = [SynapseParquetFormat]\n\t) as \nSELECT provider_display,count(total_value) as cnt\nFROM\n    OPENROWSET(\n        BULK 'https://medicaldl.dfs.core.windows.net/curated/fhir/logicalDW/Claim_main_delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\ngroup by provider_display\n\nselect top 10 * from serverlessext.claimvalue_by_provider order by cnt desc",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "fhirserverlessdb",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

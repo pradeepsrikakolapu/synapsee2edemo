@@ -1,0 +1,20 @@
+{
+	"name": "DedicatedSQL Rowgroup",
+	"properties": {
+		"folder": {
+			"name": "Performance Tuning"
+		},
+		"content": {
+			"query": "create view dbo.vCS_rg_physical_stats\nas\nwith cte\nas\n(\nselect   tb.[name]                    AS [logical_table_name]\n,        rg.[row_group_id]            AS [row_group_id]\n,        rg.[state]                   AS [state]\n,        rg.[state_desc]              AS [state_desc]\n,        rg.[total_rows]              AS [total_rows]\n,        rg.[trim_reason_desc]        AS trim_reason_desc\n,        mp.[physical_name]           AS physical_name\nFROM    sys.[schemas] sm\nJOIN    sys.[tables] tb               ON  sm.[schema_id]          = tb.[schema_id]\nJOIN    sys.[pdw_table_mappings] mp   ON  tb.[object_id]          = mp.[object_id]\nJOIN    sys.[pdw_nodes_tables] nt     ON  nt.[name]               = mp.[physical_name]\nJOIN    sys.[dm_pdw_nodes_db_column_store_row_group_physical_stats] rg      ON  rg.[object_id]     = nt.[object_id]\n                                                                            AND rg.[pdw_node_id]   = nt.[pdw_node_id]\n                                        AND rg.[distribution_id]    = nt.[distribution_id]\n)\nselect *\nfrom cte;\n\nselect count(*),logical_table_name,state_desc from dbo.vCS_rg_physical_stats\nwhere logical_table_name like 'Observation_main_cci_hash_benchmark%'\nand total_rows<1000000\nGROUP BY logical_table_name,state_desc\nORDER BY 1,2\n\nselect count(*),logical_table_name,trim_reason_desc from dbo.vCS_rg_physical_stats\nwhere logical_table_name like 'Observation_main_cci_hash_benchmark%'\nand total_rows<1000000\nGROUP BY logical_table_name,trim_reason_desc\nORDER BY 1,2\n\nselect count(*),logical_table_name from dbo.vCS_rg_physical_stats\nwhere logical_table_name like 'Observation_main_cci_hash_benchmark%'\nand total_rows<1000000\nGROUP BY logical_table_name\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "healthcare",
+				"poolName": "healthcare"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

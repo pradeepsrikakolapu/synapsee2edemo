@@ -1,0 +1,20 @@
+{
+	"name": "List_workgroup_resource_config",
+	"properties": {
+		"folder": {
+			"name": "Performance Tuning"
+		},
+		"content": {
+			"query": "select *\nfrom sys.dm_resource_governor_resource_pools\n\n\nselect name,cap_percentage_resource, request_min_resource_grant_percent,request_max_resource_grant_percent, min_percentage_resource\nfrom sys.workload_management_workload_groups\nwhere name = 'smallrc'\n\nselect name,min_percentage_resource/request_min_resource_grant_percent, cap_percentage_resource/request_min_resource_grant_percent\nfrom sys.workload_management_workload_groups\n--where name = 'smallrc'\n\n\nselect * from sys.dm_workload_management_workload_groups_stats\n\nselect name, effective_min_percentage_resource/effective_request_min_resource_grant_percent, \neffective_cap_percentage_resource/effective_request_min_resource_grant_percent \nfrom sys.dm_workload_management_workload_groups_stats\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SQLPool01",
+				"poolName": "SQLPool01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"name": "Claim_main_CTAS_OC",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"content": {
+			"query": "IF OBJECT_ID(N'healthcare.[fhir].[Claim_main_hash]') IS NOT NULL\nBEGIN\nDROP TABLE [fhir].[Claim_main_hash]\nEND\nGO\n\nCREATE TABLE [fhir].[Claim_main_hash]\nWITH\n(\n    CLUSTERED COLUMNSTORE INDEX,\n    DISTRIBUTION = HASH(Claim_id)\n)\nAS SELECT \n\tCAST([Claim_id] AS [nvarchar](64))  Claim_id,\n\tCAST([resourceType] AS [nvarchar](64))  resourceType,\n\tCAST([status] AS [nvarchar](64))  status,\n\tCAST([billablePeriod_end] AS [nvarchar](64))  billablePeriod_end,\n\tCAST([billablePeriod_start] AS [nvarchar](64))  billablePeriod_start,\n\tCAST([billablePeriod_end] AS date)  billablePeriod_end_date,\n\tCAST([billablePeriod_start] AS date)  billablePeriod_start_date,\t\n\tCAST([created] AS [nvarchar](64))  created,\n\tCAST([patient_display] AS [nvarchar](64))  patient_display,\n\tCAST([patient_id_reference] AS [nvarchar](64))  patient_id_reference,\n\tCAST([prescription_reference] AS [nvarchar](64))  prescription_reference,\n\tCAST([provider_display] AS [nvarchar](64))  provider_display,\n\tCAST([provider_org_id_reference] AS [nvarchar](64))  provider_org_id_reference,\n\tCAST([total_currency] AS [nvarchar](64))  total_currency,\n\t[total_value],\n\tCAST([use] AS [nvarchar](64))  isuse\nFROM [staging].[Claim_main_heap];\n\nselect top 10 * from [fhir].[Claim_main_hash];\n\nCREATE TABLE [fhir].[Claim_main_date_hash]\nWITH\n(\n    CLUSTERED COLUMNSTORE INDEX,\n    DISTRIBUTION = HASH(Claim_id)\n)\nAS SELECT \n\tCAST([Claim_id] AS [nvarchar](64))  Claim_id,\n\tCAST([resourceType] AS [nvarchar](64))  resourceType,\n\tCAST([status] AS [nvarchar](64))  status,\n\tCAST([billablePeriod_end] AS date)  billablePeriod_end_date,\n\tCAST([billablePeriod_start] AS date)  billablePeriod_start_date,\n\tCAST([created] AS [nvarchar](64))  created,\n\tCAST([patient_display] AS [nvarchar](64))  patient_display,\n\tCAST([patient_id_reference] AS [nvarchar](64))  patient_id_reference,\n\tCAST([prescription_reference] AS [nvarchar](64))  prescription_reference,\n\tCAST([provider_display] AS [nvarchar](64))  provider_display,\n\tCAST([provider_org_id_reference] AS [nvarchar](64))  provider_org_id_reference,\n\tCAST([total_currency] AS [nvarchar](64))  total_currency,\n\t[total_value],\n\tCAST([use] AS [nvarchar](64))  isuse\nFROM [staging].[Claim_main_heap];\n\nselect top 10 * from [fhir].[Claim_main_date_hash];\n\n/*\nCREATE TABLE [staging].[Claim_main_heap]\n( \n\t[Claim_id] [nvarchar](4000)  NULL,\n\t[resourceType] [nvarchar](4000)  NULL,\n\t[status] [nvarchar](4000)  NULL,\n\t[billablePeriod_end] [nvarchar](4000)  NULL,\n\t[billablePeriod_start] [nvarchar](4000)  NULL,\n\t[created] [nvarchar](4000)  NULL,\n\t[patient_display] [nvarchar](4000)  NULL,\n\t[patient_id_reference] [nvarchar](4000)  NULL,\n\t[prescription_reference] [nvarchar](4000)  NULL,\n\t[provider_display] [nvarchar](4000)  NULL,\n\t[provider_org_id_reference] [nvarchar](4000)  NULL,\n\t[total_currency] [nvarchar](4000)  NULL,\n\t[total_value] [float]  NULL,\n\t[use] [nvarchar](4000)  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\n*/",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "healthcare",
+				"poolName": "healthcare"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

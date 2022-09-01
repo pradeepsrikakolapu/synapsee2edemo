@@ -1,0 +1,20 @@
+{
+	"name": "crt_loading_user_OC",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"content": {
+			"query": "-- create users for Dedicated SQL Loading benchmark testing\n-- Connect to master\n\n  CREATE LOGIN loader WITH PASSWORD = 'a123STRONGpassword!';\n\n   -- Connect to the dedicated SQL pool\n   CREATE USER loader FOR LOGIN loader;\n   GRANT ADMINISTER DATABASE BULK OPERATIONS TO loader;\n\n   GRANT INSERT ON <yourtablename> TO loader;\n   GRANT SELECT ON <yourtablename> TO loader;\n   GRANT CREATE TABLE TO loader;\n   GRANT ALTER ON SCHEMA::dbo TO loader;\n   EXEC sp_addrolemember 'db_owner', 'loader';   \n   \n   CREATE WORKLOAD GROUP DataLoads\n   WITH ( \n       MIN_PERCENTAGE_RESOURCE = 0\n       ,CAP_PERCENTAGE_RESOURCE = 100\n       ,REQUEST_MIN_RESOURCE_GRANT_PERCENT = 100\n\t);\n\n   CREATE WORKLOAD CLASSIFIER [wgcELTLogin]\n   WITH (\n\t     WORKLOAD_GROUP = 'DataLoads'\n       ,MEMBERNAME = 'loader'\n   );\n\nCREATE LOGIN DedicatedSQLwUMI  FROM EXTERNAL PROVIDER;\n\nCREATE USER [DedicatedSQLwUMI] FROM EXTERNAL PROVIDER; \nEXEC sp_addrolemember 'db_owner', 'DedicatedSQLwUMI';   \nGRANT CONNECT, CONTROL, ADMINISTER DATABASE BULK OPERATIONS TO DedicatedSQLwUMI;\n\nEXEC sp_addrolemember 'largerc', 'DedicatedSQLwUMI'\n\ncreate user loader \n\nALTER DATABASE healthcare\nSET AUTO_CREATE_STATISTICS ON\n\nSELECT * FROM sys.workload_management_workload_classifiers where classifier_id <= 12\n\nSELECT  r.name AS [Resource Class]\n,       m.name AS membername\nFROM    sys.database_role_members rm\nJOIN    sys.database_principals AS r ON rm.role_principal_id = r.principal_id\nJOIN    sys.database_principals AS m ON rm.member_principal_id = m.principal_id\nWHERE   r.name IN ('mediumrc','largerc','xlargerc','staticrc10','staticrc20','staticrc30','staticrc40','staticrc50','staticrc60','staticrc70','staticrc80');\n\n--for each row returned run\nsp_droprolemember '[Resource Class]', membername\n\nEXEC sp_addrolemember 'largerc', 'madavid'\n\nSELECT\n\tr.[name]     AS [Role]\n\t, m.[name]   AS [Member]\n\t, m.Create_date AS [Created Date]\n\t, m.modify_Date AS [Modified Date]\nFROM\n\tsys.database_role_members rm\n\tJOIN sys.database_principals AS r ON rm.[role_principal_id] = r.[principal_id]\n\tJOIN sys.database_principals AS m ON rm.[member_principal_id] = m.[principal_id]\nWHERE\n\tr.[type_desc] = 'DATABASE_ROLE';\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "healthcare",
+				"poolName": "healthcare"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

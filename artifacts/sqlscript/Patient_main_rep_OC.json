@@ -1,0 +1,20 @@
+{
+	"name": "Patient_main_rep_OC",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"content": {
+			"query": "IF OBJECT_ID(N'healthcare.[fhir].[Patient_main_rep]') IS NOT NULL\nBEGIN\nDROP TABLE [fhir].[Patient_main_rep]\nEND\nGO\n\nCREATE TABLE [fhir].[Patient_main_rep]\nWITH\n(\n    CLUSTERED COLUMNSTORE INDEX,\n    DISTRIBUTION = REPLICATE\n)\nAS SELECT *\nFROM [fhir].[Patient_main_hash]\n;\n\n/*\nselect * from [fhir].[Organization_main_dedup_rep]\n\nselect count(*) from [fhir].[Organization_main] --40559808\n\nselect count(distinct Organization_id) from [fhir].[Organization_main] --9359\n\n\nselect count(*) from [fhir].[Organization_main_dedup_rep]--9359\n\nselect name from [fhir].[Organization_main_dedup_rep]\n\nselect count(*) from [fhir].[Patient_main_hash] --13515370\n\nselect count(distinct patient_id) from [fhir].[Patient_main_hash] --13511778\n\nselect top 10 * from [fhir].[Patient_main_hash] */",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "healthcare",
+				"poolName": "healthcare"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"name": "TableSkewCheck",
+	"properties": {
+		"description": "return tables that have data skew over 10%",
+		"folder": {
+			"name": "Performance Tuning/SystemProfile"
+		},
+		"content": {
+			"query": "/*\n\t========================================\n\t   Find tables with data skew over 10%\n\t========================================\n\tThis query will return tables that have data skew over 10%. These tables could be affecting query processing time and a different distribution column should be considered.\n\n\tPRE-REQUISITE: must have the vtableSizes view created: https://raw.githubusercontent.com/Microsoft/AzureDW_Query_Toolbox/master/TableInformation/CreateTableInfoView.dsql\n\tSource: https://docs.microsoft.com/en-us/azure/sql-data-warehouse/sql-data-warehouse-tables-distribute\n\n*/\nselect *\nfrom dbo.vTableSizes\nwhere two_part_name in\n    (\n    select two_part_name\n    from dbo.vTableSizes\n    where row_count > 0\n    group by two_part_name\n    having min(row_count * 1.000)/max(row_count * 1.000) > .10\n    )\nand distribution_policy_name not in ('ROUND_ROBIN','REPLICATE')\norder by two_part_name, row_count\n;\n\n\n----------------------------------------------------------------------------------\n-- ref: https://www.techtalkcorner.com/azure-synapse-analytics-monitor-data-skew/\n\nwith DataDistribution as (\nSELECT\n s.name as [Schema Name]\n,t.name as  [Table Name]\n,tp.[distribution_policy_desc] as  [Distribution Policy Name]\n,sum([row_count]) as  [Table Row Count]\n,max(row_count) as  [Max Distribution Row Count]\n,min(row_count) as  [Min Distribution Row Count]\n,avg(row_count) as  [Avg Distribution Row Count]\nfrom\n    sys.schemas s\nJOIN sys.tables t\n    ON s.[schema_id] = t.[schema_id]\nJOIN sys.pdw_table_distribution_properties tp\n    ON t.[object_id] = tp.[object_id]\nJOIN sys.pdw_table_mappings tm\n    ON t.[object_id] = tm.[object_id]\nJOIN sys.pdw_nodes_tables nt\n    ON tm.[physical_name] = nt.[name]\nJOIN sys.dm_pdw_nodes pn\n    ON  nt.[pdw_node_id] = pn.[pdw_node_id]\nJOIN sys.pdw_distributions di\n    ON  nt.[distribution_id] = di.[distribution_id]\nJOIN sys.dm_pdw_nodes_db_partition_stats nps\n ON nt.[object_id] = nps.[object_id]\n    AND nt.[pdw_node_id] = nps.[pdw_node_id]\n    AND nt.[distribution_id] = nps.[distribution_id]\nwhere tp.[distribution_policy_desc] ='HASH'\n -- AND t.name = @tbl\nGROUP BY\n  s.name\n,t.name\n,tp.[distribution_policy_desc]\n)\nSelect [Schema Name],\n\t   [Table Name],\n\t   [Distribution Policy Name],\n\t   [Table Row Count],\n\t   [Max Distribution Row Count],\n\t   [Min Distribution Row Count],\n\t   [Avg Distribution Row Count],\n\t   CASE WHEN [Table Row Count] = 0 then -1\n\t   else abs([Max Distribution Row Count] * 1.0 - [Min Distribution Row Count]*1.0) / [Max Distribution Row Count] * 100.0\n\t   END  as [Table Skew Percent]\nFROM DataDistribution\n\nDBCC PDW_SHOWSPACEUSED('tpch1t.customer_hash_custkey_CCI');",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SQLPool01",
+				"poolName": "SQLPool01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

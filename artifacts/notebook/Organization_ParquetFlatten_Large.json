@@ -1,0 +1,400 @@
+{
+	"name": "Organization_ParquetFlatten_Large",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate/FHIR"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "healthcare",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "112g",
+			"driverCores": 16,
+			"executorMemory": "112g",
+			"executorCores": 16,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "0bff0a46-e402-4442-8654-32278a728807"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/7e416de3-c506-4776-8270-83fd73c6cc37/resourceGroups/syne2e/providers/Microsoft.Synapse/workspaces/health/bigDataPools/healthcare",
+				"name": "healthcare",
+				"type": "Spark",
+				"endpoint": "https://health.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/healthcare",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 16,
+				"memory": 112,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 15
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"curated_location = \"abfss://curated@medicaldl.dfs.core.windows.net/fhir/30tbCurated/\"\r\n",
+					"processed_location = \"abfss://processed@medicaldl.dfs.core.windows.net/fhir/30tbdataset/\"\r\n",
+					"write_mode=\"overwrite\""
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Organization_df=spark.read.parquet(processed_location+\"Organization/\")"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": true
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Organization_df.printSchema()"
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"Organization_df.count()"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"display(Organization_df.limit(10))"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": true
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import regexp_replace\r\n",
+					"\r\n",
+					"Organization_df=Organization_df.withColumn(\"encounter\",regexp_replace(\"encounter.reference\",\"Encounter/\",\"\"))\r\n",
+					"Organization_df=Organization_df.withColumn(\"subject\",regexp_replace(\"subject.reference\",\"Patient/\",\"\"))\r\n",
+					"\r\n",
+					"Organization_df=Organization_df.withColumnRenamed(\"id\",\"MedicationRequest_id\")\r\n",
+					"Organization_df=Organization_df.withColumnRenamed(\"encounter\",\"encounter_id_reference\")\r\n",
+					"Organization_df=Organization_df.withColumnRenamed(\"subject\",\"subject_patient_id_reference\")"
+				],
+				"execution_count": 16
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": true
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"MedicationRequest_df.printSchema()"
+				],
+				"execution_count": 9
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": true
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"#display(MedicationRequest_df.limit(10))"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import explode\r\n",
+					"\r\n",
+					"MedicationRequest_main_df = MedicationRequest_df.select(\r\n",
+					"    \"MedicationRequest_id\",\"encounter_id_reference\",\"subject_patient_id_reference\",\"authoredOn\",\"intent\",\r\n",
+					"    \"requester.display\",\"requester.reference\",\"resourceType\",\"status\"\r\n",
+					").withColumn(\"reference\",regexp_replace(\"reference\",\"Practitioner/\",\"\")).withColumnRenamed(\r\n",
+					"    \"reference\",\"Practitioner_id_reference\")"
+				],
+				"execution_count": 26
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"MedicationRequest_main_df.printSchema()"
+				],
+				"execution_count": 19
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"display(MedicationRequest_main_df.limit(10))"
+				],
+				"execution_count": 27
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"MedicationRequest_main_df.count()"
+				],
+				"execution_count": 29
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"MedicationRequest_main_df.write.mode(write_mode).parquet(curated_location+\"MedicationRequest_main_df/\")\r\n",
+					"#ExplanationOfBenefit_main_df.write.format(\"delta\").saveAsTable(\"fhirlakedb.ExplanationOfBenefit_main\")\r\n",
+					"#Patient_identifier_df.write.format(\"delta\").save(curated_location+\"Condition_clinicalStatus_delta/\")"
+				],
+				"execution_count": 30
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import explode\r\n",
+					"from pyspark.sql.functions import regexp_replace\r\n",
+					"\r\n",
+					"MedicationRequest_reasonReference_df = MedicationRequest_df.select(\r\n",
+					"    \"MedicationRequest_id\",explode(MedicationRequest_df.reasonReference)).toDF(*(\r\n",
+					"    \"MedicationRequest_id\",\"reasonReference\")).select(\"MedicationRequest_id\",\"reasonReference.reference\").toDF(*(\r\n",
+					"        \"MedicationRequest_id\",\"reason_Condition_id_reference\"))\r\n",
+					"MedicationRequest_reasonReference_df = MedicationRequest_reasonReference_df.withColumn(\r\n",
+					"    \"reason_Condition_id_reference\",regexp_replace(\"reason_Condition_id_reference\",\"Condition/\",\"\"))   "
+				],
+				"execution_count": 39
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"MedicationRequest_reasonReference_df.printSchema()"
+				],
+				"execution_count": 36
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"MedicationRequest_reasonReference_df.count()"
+				],
+				"execution_count": 102
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"display(MedicationRequest_reasonReference_df.limit(10))"
+				],
+				"execution_count": 40
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"MedicationRequest_reasonReference_df.write.mode(write_mode).parquet(curated_location+\"MedicationRequest_reasonReference/\")\r\n",
+					"#Observation_category_df.write.format(\"delta\").saveAsTable(\"fhirlakedb.Observation_category\")\r\n",
+					"#Patient_identifier_df.write.format(\"delta\").save(curated_location+\"Condition_clinicalStatus_delta/\")"
+				],
+				"execution_count": 42
+			}
+		]
+	}
+}

@@ -1,0 +1,16 @@
+{
+	"name": "PatientExtensionSQLLarge",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SynapseDedicatedSQLHealthcare",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "fhir",
+			"table": "PatientExtension"
+		}
+	}
+}

@@ -1,0 +1,357 @@
+{
+	"name": "vcf2parquet1000genomes",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate/Genomic"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "healthcare",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "112g",
+			"driverCores": 16,
+			"executorMemory": "112g",
+			"executorCores": 16,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "945adabf-7d22-4fdf-8a02-7424df303f48"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/7e416de3-c506-4776-8270-83fd73c6cc37/resourceGroups/syne2e/providers/Microsoft.Synapse/workspaces/health/bigDataPools/healthcare",
+				"name": "healthcare",
+				"type": "Spark",
+				"endpoint": "https://health.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/healthcare",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 16,
+				"memory": 112,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql.functions import explode, col, lit, xxhash64\r\n",
+					"from math import ceil\r\n",
+					"from notebookutils import mssparkutils\r\n",
+					"\r\n",
+					"# Import glow.py and register Glow package\r\n",
+					"import glow\r\n",
+					"glow.register(spark)"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Provide your storage account, container and SAS token\r\n",
+					"outputStorageAccount = \"asadatalakedmquest\"\r\n",
+					"outputContainer = \"genomic\"\r\n",
+					"outputSAS = \"sv=2020-02-10&st=2022-05-04T16%3A56%3A39Z&se=2022-05-05T16%3A56%3A39Z&sr=c&sp=racwdlmeop&sig=6dS6UjYZ4ggleLzFJI4ri4DHVM4BVhM%2FA01DYrTIi8s%3D\"\r\n",
+					"outputDir = \"VFC2Parquettest\"\r\n",
+					"#https://asadatalakedmquest.blob.core.windows.net/genomic?sv=2020-02-10&st=2022-05-04T16%3A56%3A39Z&se=2022-05-05T16%3A56%3A39Z&sr=c&sp=racwdlmeop&sig=6dS6UjYZ4ggleLzFJI4ri4DHVM4BVhM%2FA01DYrTIi8s%3D"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Configure session credentials\r\n",
+					"# Set up a SAS for a container with public data - no changes needed here (public SAS)\r\n",
+					"spark.conf.set(\r\n",
+					"  \"fs.azure.sas.dataset.dataset1000genomes.blob.core.windows.net\",\r\n",
+					"  \"sv=2019-10-10&si=prod&sr=c&sig=9nzcxaQn0NprMPlSh4RhFQHcXedLQIcFgbERiooHEqM%3D\")\r\n",
+					"\r\n",
+					"# Set up a SAS for a container to store .parquet files\r\n",
+					"#spark.conf.set(\r\n",
+					"#  \"fs.azure.sas.\"+outputContainer+\".\"+outputStorageAccount+\".blob.core.windows.net\", outputSAS)"
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# DropDuplicates() partitions into 200 pieces (default value)\r\n",
+					"# To change default number of partitions change config -  sqlContext.setConf(\"spark.sql.shuffle.partitions\", <YourNumberOfPartitions>)\r\n",
+					"partitionMax = 1500\r\n",
+					"sqlContext.setConf(\"spark.sql.shuffle.partitions\", partitionMax)"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Flatten struct columns\r\n",
+					"def flattenStructFields(df):\r\n",
+					"  flat_cols = [c[0] for c in df.dtypes if c[1][:6] != 'struct']\r\n",
+					"  nested_cols = [c[0] for c in df.dtypes if c[1][:6] =='struct']\r\n",
+					"  flat_df = df.select(flat_cols + \r\n",
+					"                     [col(nc+'.'+c).alias(nc+'_'+c)\r\n",
+					"                     for nc in nested_cols\r\n",
+					"                     for c in df.select(nc+'.*').columns])\r\n",
+					"  return flat_df\r\n",
+					"\r\n",
+					"# Add empty columns to match schema\r\n",
+					"def completeSchema(df, diffSet):\r\n",
+					"  full_df = df\r\n",
+					"  for column in diffSet:\r\n",
+					"    full_df = full_df.withColumn(column.name, lit(None).cast(column.dataType.simpleString()))\r\n",
+					"  return full_df\r\n",
+					"\r\n",
+					"# Transform dataframe with original vcf schema\r\n",
+					"def transformVcf(df, toFlatten, toHash, fullSchemaFields):\r\n",
+					"  # Drop duplicates\r\n",
+					"  dataDedup = df.dropDuplicates()\r\n",
+					"     \r\n",
+					"  # Add hashId column to identify variants\r\n",
+					"  if toHash:\r\n",
+					"    hashCols = list(set(data.columns) - {'genotypes'})\r\n",
+					"    dataHashed = dataDedup.withColumn('hashId', xxhash64(*hashCols))\r\n",
+					"  else:\r\n",
+					"    dataHashed = dataDedup\r\n",
+					"  \r\n",
+					"  # Flatten data - explode on genotypes, create separate column for each genotypes field, add empty columns to match schema to full dataset\r\n",
+					"  if not toFlatten:\r\n",
+					"    dataFinal = dataHashed\r\n",
+					"  else:\r\n",
+					"  # Explode and flatten data\r\n",
+					"    dataExploded = dataHashed.withColumn('genotypes', explode('genotypes'))\r\n",
+					"    dataExplodedFlatten = flattenStructFields(dataExploded)\r\n",
+					"  # Find schema for contig dataset and add columns to match full schema\r\n",
+					"    contigSet = set(dataExplodedFlatten.schema.fields)\r\n",
+					"    diffSet =(fullSchemaFields - contigSet)\r\n",
+					"    dataFinal = completeSchema(dataExplodedFlatten, diffSet)\r\n",
+					"   \r\n",
+					"  return dataFinal"
+				],
+				"execution_count": 5
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": true
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"#mssparkutils.fs.help()"
+				],
+				"execution_count": 6
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"flatOptions = [False, True]\r\n",
+					"#dbutils.widgets.dropdown(\"flatten\", \"False\", [str(x) for x in flatOptions])\r\n",
+					"#mssparkutils.widgets.dropdown(\"flatten\", \"False\", [str(x) for x in flatOptions])\r\n",
+					"\r\n",
+					"contigOptions =  list(map(str, range(1, 23)))\r\n",
+					"contigLiterals = ['X','Y','MT', 'All']\r\n",
+					"contigOptions.extend(contigLiterals)\r\n",
+					"#dbutils.widgets.multiselect(\"contigsToProcess\", \"22\", contigOptions)\r\n",
+					"#mssparkutils.widgets.multiselect(\"contigsToProcess\", \"22\", contigOptions)"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Define parameters\r\n",
+					"#toFlatten = eval(getArgument(\"flatten\"))\r\n",
+					"#toFlatten = (\"False\",\"True\")\r\n",
+					"toFlatten = (\"False\")\r\n",
+					"toHash = True\r\n",
+					"repartitionCoef = 45 / 1000000 # gives ~20MB .parquet files\r\n",
+					"\r\n",
+					"# Define contig list\r\n",
+					"#contigs = getArgument(\"contigsToProcess\").split(\",\")\r\n",
+					"contigs = (\"22\")\r\n",
+					"if \"All\" in contigs:\r\n",
+					"  contigs = contigOptions\r\n",
+					"  contigs.remove('All')\r\n",
+					"\r\n",
+					"# Find schema for full dataset\r\n",
+					"sourceAll = \"wasbs://dataset@dataset1000genomes.blob.core.windows.net/release/20130502/ALL.chr22*.vcf.gz\"\r\n",
+					"dataAll = spark.read\\\r\n",
+					"  .format(\"vcf\")\\\r\n",
+					"  .option(\"includeSampleIds\", True)\\\r\n",
+					"  .option(\"flattenInfoFields\", True)\\\r\n",
+					"  .load(sourceAll)\r\n",
+					"\r\n",
+					"dataAllExploded = dataAll.withColumn('genotypes', explode('genotypes'))\r\n",
+					"dataAllExplodedFlatten = flattenStructFields(dataAllExploded)\r\n",
+					"fullSet = set(dataAllExplodedFlatten.schema.fields)\r\n",
+					"                 \r\n",
+					"for contig in contigs:\r\n",
+					"  #source = \"wasbs://dataset@dataset1000genomes.blob.core.windows.net/release/20130502/ALL.chr\"+contig+\".*.vcf.gz\"\r\n",
+					"  source = \"wasbs://dataset@dataset1000genomes.blob.core.windows.net/release/20130502/ALL.chr22.*.vcf.gz\"\r\n",
+					"\r\n",
+					"# Load data\r\n",
+					"  data = spark.read\\\r\n",
+					"    .format(\"vcf\")\\\r\n",
+					"    .option(\"includeSampleIds\", True)\\\r\n",
+					"    .option(\"flattenInfoFields\", True)\\\r\n",
+					"    .load(source)\r\n",
+					"  \r\n",
+					"  # Define number of partitions, will be used for coalesce later\r\n",
+					"  rowCount = data.count()\r\n",
+					"  partCount = ceil (repartitionCoef * rowCount)  \r\n",
+					"  if partCount > partitionMax:\r\n",
+					"    partCount = partitionMax\r\n",
+					"\r\n",
+					"  dataFinal = transformVcf(data, toFlatten, toHash, fullSet)\r\n",
+					"     \r\n",
+					"  "
+				],
+				"execution_count": 10
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"#display(dataFinal)"
+				],
+				"execution_count": 11
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Provide your storage account, container and SAS token\r\n",
+					"outputStorageAccount = \"dmblobonly123\"\r\n",
+					"outputContainer = \"genomic\"\r\n",
+					"outputSAS = \"sp=racwdli&st=2022-05-04T18:23:20Z&se=2022-05-05T02:23:20Z&spr=https&sv=2020-08-04&sr=c&sig=jNOTzLOW2BTSXlrORFS20FCV8OmxV7Ed5IWd%2B2Kcc5k%3D\"\r\n",
+					"outputDir = \"VFC2Parquettest\"\r\n",
+					"\r\n",
+					"# assemble blob path with wasbs\r\n",
+					"sink = \"wasbs://\"+outputContainer + \"@\" + outputStorageAccount + \".blob.core.windows.net\"+  \"?\" + outputSAS+ \"/\" + outputDir + \"/flattened/chr\"+contig\r\n",
+					"\r\n",
+					"# assemble adlsg2 path with abfss \r\n",
+					"sink = \"abfss:/genomic@asadatalakedmquest.dfs.core.windows.net/VFC2Parquettest/flattened/chr22\"\r\n",
+					"\r\n",
+					"dataFinal.coalesce(partCount). \\\r\n",
+					"    write. \\\r\n",
+					"    mode(\"overwrite\"). \\\r\n",
+					"    format(\"parquet\"). \\\r\n",
+					"    save(sink)"
+				],
+				"execution_count": 12
+			}
+		]
+	}
+}

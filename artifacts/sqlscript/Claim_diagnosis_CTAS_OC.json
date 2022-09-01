@@ -1,0 +1,20 @@
+{
+	"name": "Claim_diagnosis_CTAS_OC",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"content": {
+			"query": "IF OBJECT_ID(N'healthcare.[fhir].[Claim_diagnosis_hash]') IS NOT NULL\nBEGIN\nDROP TABLE [fhir].[Claim_diagnosis_hash]\nEND\nGO\n\nCREATE TABLE [fhir].[Claim_diagnosis_hash]\nWITH\n(\n    CLUSTERED COLUMNSTORE INDEX,\n    DISTRIBUTION = HASH(Claim_id)\n)\nAS SELECT \n\tCAST([Claim_id] AS [nvarchar](64))  Claim_id,\n\tCAST([diagnosis_reference] AS [nvarchar](64))  diagnosis_reference,\n\tCAST([diagnosis_sequence] AS [int])  diagnosis_sequence\nFROM [staging].[Claim_diagnosis_heap];\n\nselect top 10 * from [fhir].[Claim_diagnosis_hash];\n\n/*\nCREATE TABLE [staging].[Claim_diagnosis_heap]\n( \n\t[Claim_id] [nvarchar](4000)  NULL,\n\t[diagnosis_reference] [nvarchar](4000)  NULL,\n\t[diagnosis_sequence] [bigint]  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\n*/",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "healthcare",
+				"poolName": "healthcare"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,16 @@
+{
+	"name": "Claim_insuranceSQL1",
+	"properties": {
+		"annotations": [],
+		"type": "SqlPoolTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "fhir",
+			"table": "ClaimInsurance"
+		},
+		"sqlPool": {
+			"referenceName": "healthcare",
+			"type": "SqlPoolReference"
+		}
+	}
+}

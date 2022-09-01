@@ -1,0 +1,20 @@
+{
+	"name": "crt_oversized_rep_table",
+	"properties": {
+		"folder": {
+			"name": "Performance Tuning/Replicated Tables"
+		},
+		"content": {
+			"query": "create table wwi_perf.reptabover2g \nWITH\n(\n\tDISTRIBUTION = REPLICATE,\n\tCLUSTERED INDEX(TransactionId)\n)\nAS\nSELECT * from \nwwi_perf.Sale_Hash_Ordered\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SQLPool01",
+				"poolName": "SQLPool01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

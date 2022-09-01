@@ -1,0 +1,20 @@
+{
+	"name": "PatientRawParquetLarge",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "health-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "fhir/30tbdataset/Patient",
+				"fileSystem": "processed"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

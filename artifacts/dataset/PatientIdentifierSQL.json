@@ -1,0 +1,74 @@
+{
+	"name": "PatientIdentifierSQL",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SynapseDedicatedSQLHealthcare",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [
+			{
+				"name": "Patient_id",
+				"type": "nvarchar"
+			},
+			{
+				"name": "resourceType",
+				"type": "nvarchar"
+			},
+			{
+				"name": "birthDate",
+				"type": "nvarchar"
+			},
+			{
+				"name": "deceasedDateTime",
+				"type": "nvarchar"
+			},
+			{
+				"name": "gender",
+				"type": "nvarchar"
+			},
+			{
+				"name": "multipleBirthBoolean",
+				"type": "bit"
+			},
+			{
+				"name": "multipleBirthInteger",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "text_div",
+				"type": "nvarchar"
+			},
+			{
+				"name": "text_status",
+				"type": "nvarchar"
+			},
+			{
+				"name": "maritalStatus_text",
+				"type": "nvarchar"
+			},
+			{
+				"name": "type_text",
+				"type": "nvarchar"
+			},
+			{
+				"name": "code",
+				"type": "nvarchar"
+			},
+			{
+				"name": "display",
+				"type": "nvarchar"
+			},
+			{
+				"name": "system",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "fhir",
+			"table": "Patient_identifier_hash"
+		}
+	}
+}

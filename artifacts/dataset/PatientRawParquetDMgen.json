@@ -1,0 +1,20 @@
+{
+	"name": "PatientRawParquetDMgen",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "health-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "fhir/FHIRdmgenProcessed/Patient",
+				"fileSystem": "processed"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

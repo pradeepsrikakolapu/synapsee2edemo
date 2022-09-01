@@ -1,0 +1,20 @@
+{
+	"name": "Dedicated SQL pool MV creation_OC",
+	"properties": {
+		"folder": {
+			"name": "OneClickTemplate"
+		},
+		"content": {
+			"query": "create materialized view fhir.mvClaimMain with (DISTRIBUTION=HASH(patient_display)) AS\nSELECT \n[patient_display] , COUNT_BIG([Claim_id]) as cnt\nfrom [fhir].[Claim_main_hash]\nGROUP BY [patient_display] ",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "healthcare",
+				"poolName": "healthcare"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

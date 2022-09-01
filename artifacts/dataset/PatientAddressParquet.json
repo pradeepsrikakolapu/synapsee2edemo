@@ -1,0 +1,66 @@
+{
+	"name": "PatientAddressParquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SynapseDedicatedSQLHealthcare",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [
+			{
+				"name": "Observation_id",
+				"type": "nvarchar"
+			},
+			{
+				"name": "resourceType",
+				"type": "nvarchar"
+			},
+			{
+				"name": "issued",
+				"type": "nvarchar"
+			},
+			{
+				"name": "status",
+				"type": "nvarchar"
+			},
+			{
+				"name": "patient_id_reference",
+				"type": "nvarchar"
+			},
+			{
+				"name": "encounter_id_reference",
+				"type": "nvarchar"
+			},
+			{
+				"name": "effectiveDateTime",
+				"type": "nvarchar"
+			},
+			{
+				"name": "valueQuantity_code",
+				"type": "nvarchar"
+			},
+			{
+				"name": "valueQuantity_system",
+				"type": "nvarchar"
+			},
+			{
+				"name": "valueQuantity_unit",
+				"type": "nvarchar"
+			},
+			{
+				"name": "valueQuantity_value",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "valueString",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Observation_main"
+		}
+	}
+}
