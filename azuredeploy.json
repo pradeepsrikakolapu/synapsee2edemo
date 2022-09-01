@@ -82,7 +82,7 @@
     "_artifactsLocation": "[deployment().properties.templatelink.uri]",
     "location": "[resourceGroup().location]",
     "deploymentType": "synapseworkspacedeployment",
-    "dlsName": "medicaldl",
+    "dlsName": "medicaldlcopy",
     "dlsFsName": "synapse",
     "sqlPoolName": "healthcare",
     "workspaceName": "sysnapsee2edemo",
